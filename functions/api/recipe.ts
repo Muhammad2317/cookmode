@@ -7,7 +7,7 @@
 
 import { recipeError } from "../../lib/errors";
 import { extractPage, looksLikeBotWall } from "../../lib/extractPage";
-import { parseRecipe } from "../../lib/parseRecipe";
+import { parseRecipes } from "../../lib/parseRecipe";
 import type { RecipeErrorCode, RecipeResponse } from "../../lib/types";
 import { validateUrl } from "../../lib/validateUrl";
 
@@ -15,7 +15,7 @@ const TIMEOUT_MS = 8_000;
 const MAX_BYTES = 3 * 1024 * 1024;
 const MAX_REDIRECTS = 5;
 const USER_AGENT =
-  "CookMode/0.1 (+https://cookmode.pages.dev; reads a single recipe on request and links back to the original)";
+  "CookMode/0.1 (+https://cookmode.pages.dev; reads one recipe page on request and links back to the original)";
 
 const ERROR_STATUS: Record<RecipeErrorCode, number> = {
   INVALID_URL: 400,
@@ -152,7 +152,7 @@ export const onRequestGet: PagesFunction = async (context) => {
 
     const html = await readCapped(response, controller.signal);
     const page = extractPage(html);
-    const recipe = parseRecipe({
+    const recipes = parseRecipes({
       jsonLd: page.jsonLd,
       pageUrl: url.href,
       meta: {
@@ -163,14 +163,14 @@ export const onRequestGet: PagesFunction = async (context) => {
       },
     });
 
-    if (!recipe)
+    if (recipes.length === 0)
       return fail(
         page.jsonLd.length === 0 && looksLikeBotWall(html)
           ? "BLOCKED"
           : "NO_RECIPE_FOUND",
       );
 
-    return json({ ok: true, recipe }, 200, "public, max-age=600");
+    return json({ ok: true, recipes }, 200, "public, max-age=600");
   } catch (err) {
     if (err instanceof FetchError) return fail(err.code);
     return fail("FETCH_FAILED");

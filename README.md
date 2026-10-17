@@ -78,20 +78,20 @@ A request flow, end to end:
 
 ## Live extraction test results
 
-Tested 2026-10-17 against the real function running locally under `wrangler pages dev`, using Cook Mode's honest User-Agent. "Notes" covers quirks in each site's own data that Cook Mode passes through as-is.
+Tested 2026-10-17 against the real function running locally under `wrangler pages dev`, using Cook Mode's honest User-Agent. "Notes" covers quirks in each site's own data and how Cook Mode handles them.
 
-| Site                     | Country | Works? | Notes                                                                                                                                         |
-| ------------------------ | ------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| BBC Good Food            | UK      | ✅     | Clean data. Yield "Makes 12".                                                                                                                 |
-| olive                    | UK      | ✅     | Clean data.                                                                                                                                   |
-| delicious. magazine      | UK      | ✅     | Yield "Serves 6-8" → base count 6.                                                                                                            |
-| The Guardian             | UK      | ✅     | Emits floats ("Serves 2.0", "5.0tbsp"); tidied to "2" / "5tbsp". Some articles hold several recipes; only the first is returned for now.      |
-| RecipeTin Eats           | AU      | ✅     | WP Recipe Maker `@graph`; sections come through ("Chicken", "Chasseur Sauce"), including the site's own "Abbreviated Recipe" summary section. |
-| Allrecipes               | US      | ✅     | Yield `["8", "1 (9x5-inch) meatloaf"]`; label kept consistent with the count ("8 servings").                                                  |
-| Serious Eats             | US      | ✅     | Clean data.                                                                                                                                   |
-| Bon Appétit              | US      | ✅     | No prep/cook times published.                                                                                                                 |
-| Budget Bytes             | US      | ✅     | Ingredient lines include the site's cost notes, e.g. "($6.25)".                                                                               |
-| Sally's Baking Addiction | US      | ✅     | Yield "2 dozen" (scales in dozens).                                                                                                           |
+| Site                     | Country | Works? | Notes                                                                                                                                                                                            |
+| ------------------------ | ------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| BBC Good Food            | UK      | ✅     | Clean data. Yield "Makes 12".                                                                                                                                                                    |
+| olive                    | UK      | ✅     | Clean data.                                                                                                                                                                                      |
+| delicious. magazine      | UK      | ✅     | Yield "Serves 6-8" → base count 6.                                                                                                                                                               |
+| The Guardian             | UK      | ✅     | Emits floats ("Serves 2.0", "5.0tbsp"); tidied to "2" / "5tbsp". Multi-recipe articles return every recipe (the UI will offer a picker).                                                         |
+| RecipeTin Eats           | AU      | ✅     | WP Recipe Maker `@graph`; sections come through ("Chicken", "Chasseur Sauce"), its condensed "Abbreviated Recipe" duplicate is dropped, and "((Note 1))" / "(, sliced)" plugin markup is tidied. |
+| Allrecipes               | US      | ✅     | Yield `["8", "1 (9x5-inch) meatloaf"]`; label kept consistent with the count ("8 servings").                                                                                                     |
+| Serious Eats             | US      | ✅     | Clean data.                                                                                                                                                                                      |
+| Bon Appétit              | US      | ✅     | No prep/cook times published.                                                                                                                                                                    |
+| Budget Bytes             | US      | ✅     | Per-ingredient prices ("($6.25)") are stripped for cook-time readability.                                                                                                                        |
+| Sally's Baking Addiction | US      | ✅     | Yield "2 dozen" (scales in dozens).                                                                                                                                                              |
 
 **Result: 10 / 10.** Error paths were checked live too: a page with no recipe (`NO_RECIPE_FOUND`), an HTML page over 3 MB (`TOO_LARGE`), a 12s response (`TIMEOUT` at 8s), 403/429 (`BLOCKED`), a 500 (`FETCH_FAILED`), and a redirect to `127.0.0.1` (refused, `FETCH_FAILED`).
 

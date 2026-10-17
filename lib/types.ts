@@ -45,4 +45,4 @@ export interface RecipeError {
 }
 
 export type RecipeResponse =
-  { ok: true; recipe: Recipe } | { ok: false; error: RecipeError };
+  { ok: true; recipes: Recipe[] } | { ok: false; error: RecipeError };

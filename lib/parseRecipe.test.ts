@@ -3,7 +3,7 @@
 // No real page content is copied here.
 
 import { describe, expect, it } from "vitest";
-import { parseRecipe } from "./parseRecipe";
+import { parseRecipe, parseRecipes } from "./parseRecipe";
 
 const PAGE = "https://www.example-recipes.test/recipes/lemon-pasta/";
 
@@ -525,5 +525,104 @@ describe("parseRecipe — site, source and text fields", () => {
         { text: "Toss with lemon.", section: null },
       ],
     });
+  });
+});
+
+describe("parseRecipes — pages with several recipes", () => {
+  const second = {
+    "@type": "Recipe",
+    name: "Pork Rolls",
+    recipeIngredient: ["500g pork mince"],
+    recipeInstructions: [{ "@type": "HowToStep", text: "Roll and bake." }],
+  };
+  const many = (blocks: unknown[]) =>
+    parseRecipes({
+      jsonLd: blocks.map((b) => JSON.stringify(b)),
+      pageUrl: PAGE,
+    });
+
+  it("returns every usable recipe in page order", () => {
+    expect(many([{ "@graph": [minimal, second] }]).map((r) => r.title)).toEqual(
+      ["Lemon Pasta", "Pork Rolls"],
+    );
+  });
+
+  it("returns recipes from separate blocks", () => {
+    expect(many([minimal, second]).map((r) => r.title)).toEqual([
+      "Lemon Pasta",
+      "Pork Rolls",
+    ]);
+  });
+
+  it("skips empty stubs and exact duplicates", () => {
+    const stub = { "@type": "Recipe", name: "Stub" };
+    expect(many([stub, minimal, minimal, second]).map((r) => r.title)).toEqual([
+      "Lemon Pasta",
+      "Pork Rolls",
+    ]);
+  });
+
+  it("returns an empty list when there is no recipe", () => {
+    expect(many([{ "@type": "Article" }])).toEqual([]);
+  });
+});
+
+describe("parseRecipe — cook-time clean-up", () => {
+  it("drops an abbreviated summary section when the full method exists", () => {
+    const steps = parse([
+      {
+        ...minimal,
+        recipeInstructions: [
+          {
+            "@type": "HowToSection",
+            name: "Abbreviated Recipe",
+            itemListElement: [
+              { "@type": "HowToStep", text: "Do everything quickly." },
+            ],
+          },
+          {
+            "@type": "HowToSection",
+            name: "Sauce",
+            itemListElement: [
+              { "@type": "HowToStep", text: "Make the sauce." },
+            ],
+          },
+        ],
+      },
+    ])?.steps;
+    expect(steps).toEqual([{ text: "Make the sauce.", section: "Sauce" }]);
+  });
+
+  it("keeps a summary section if it is the only method", () => {
+    const steps = parse([
+      {
+        ...minimal,
+        recipeInstructions: [
+          {
+            "@type": "HowToSection",
+            name: "Quick version",
+            itemListElement: [{ "@type": "HowToStep", text: "Only step." }],
+          },
+        ],
+      },
+    ])?.steps;
+    expect(steps).toEqual([{ text: "Only step.", section: "Quick version" }]);
+  });
+
+  it("tidies plugin markup, prices and note references", () => {
+    const r = parse([
+      {
+        ...minimal,
+        recipeIngredient: [
+          "1/4 cup brandy ((Note 2))",
+          "2 Tbsp butter ($0.28)",
+        ],
+        recipeInstructions: [
+          { "@type": "HowToStep", text: "Add the brandy (Note 2)." },
+        ],
+      },
+    ]);
+    expect(r?.ingredients).toEqual(["1/4 cup brandy", "2 Tbsp butter"]);
+    expect(r?.steps).toEqual([{ text: "Add the brandy.", section: null }]);
   });
 });

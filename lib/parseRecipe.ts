@@ -6,6 +6,7 @@
 import { parseDuration } from "./parseDuration";
 import { parseJsonLoose } from "./parseJsonLoose";
 import { cleanText, htmlToText } from "./text";
+import { isSummarySection, tidyIngredient, tidyStep } from "./tidy";
 import type { Recipe, RecipeStep, RecipeYield } from "./types";
 
 export interface ParseRecipeInput {
@@ -101,21 +102,6 @@ function resolver(byId: Map<string, Node>) {
 }
 
 type Resolve = ReturnType<typeof resolver>;
-
-/** Prefer the Recipe node that actually has content; some pages include stubs. */
-function pickRecipe(recipes: Node[]): Node | undefined {
-  return (
-    recipes.find(
-      (r) =>
-        r.recipeInstructions !== undefined && r.recipeIngredient !== undefined,
-    ) ??
-    recipes.find(
-      (r) =>
-        r.recipeInstructions !== undefined || r.recipeIngredient !== undefined,
-    ) ??
-    recipes[0]
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Field normalisers
@@ -214,7 +200,7 @@ function normaliseIngredients(value: unknown): string[] {
     const raw = isObject(item) ? (item.text ?? item.name) : item;
     if (typeof raw !== "string") continue;
     for (const line of htmlToText(raw).split("\n")) {
-      const text = tidyNumbers(cleanText(line));
+      const text = tidyIngredient(tidyNumbers(cleanText(line)));
       if (text) lines.push(text);
     }
   }
@@ -230,7 +216,7 @@ function splitInstructionText(raw: string): string[] {
   const html = raw.includes("<li") ? raw.split(/<li\b[^>]*>/i).slice(1) : [raw];
   const lines = html.flatMap((chunk) => htmlToText(chunk).split("\n"));
   return lines
-    .map((line) => cleanText(line).replace(STEP_NUMBER_RE, "").trim())
+    .map((line) => tidyStep(cleanText(line).replace(STEP_NUMBER_RE, "")))
     .filter((line) => line && !BARE_STEP_LABEL_RE.test(line));
 }
 
@@ -283,7 +269,10 @@ function collectSteps(
 function normaliseSteps(value: unknown, resolve: Resolve): RecipeStep[] {
   const steps: RecipeStep[] = [];
   collectSteps(value, null, resolve, steps);
-  return steps;
+  // Drop a condensed duplicate of the method ("Abbreviated Recipe"), but only
+  // when the full method is there too.
+  const full = steps.filter((step) => !isSummarySection(step.section));
+  return full.length > 0 ? full : steps;
 }
 
 function minutes(value: unknown): number | null {
@@ -301,16 +290,46 @@ function hostnameLabel(url: string): string {
 
 // ---------------------------------------------------------------------------
 
-/** Parse the page's JSON-LD into a Recipe, or null if no usable Recipe node exists. */
-export function parseRecipe(input: ParseRecipeInput): Recipe | null {
+/**
+ * Parse every usable Recipe on the page, shallowest first (so page order for
+ * sibling recipes). Pages such as
+ * newspaper articles can hold several; nodes with neither ingredients nor
+ * steps, and exact duplicates, are skipped.
+ */
+export function parseRecipes(input: ParseRecipeInput): Recipe[] {
   const parsed = input.jsonLd
     .map(parseJsonLoose)
     .filter((v) => v !== undefined);
-  const { recipes, byId } = walk(parsed);
-  const node = pickRecipe(recipes);
-  if (!node) return null;
-
+  const { recipes: nodes, byId } = walk(parsed);
   const resolve = resolver(byId);
+
+  const recipes: Recipe[] = [];
+  const seen = new Set<string>();
+  for (const node of nodes) {
+    const recipe = normaliseRecipe(node, resolve, input);
+    if (!recipe) continue;
+    const key = JSON.stringify([
+      recipe.title,
+      recipe.ingredients,
+      recipe.steps,
+    ]);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    recipes.push(recipe);
+  }
+  return recipes;
+}
+
+/** The first usable Recipe on the page, or null. */
+export function parseRecipe(input: ParseRecipeInput): Recipe | null {
+  return parseRecipes(input)[0] ?? null;
+}
+
+function normaliseRecipe(
+  node: Node,
+  resolve: Resolve,
+  input: ParseRecipeInput,
+): Recipe | null {
   const meta = input.meta ?? {};
   const base = input.pageUrl;
 
