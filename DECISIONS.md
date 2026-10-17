@@ -40,3 +40,9 @@ One line per non-trivial decision: what, why, alternatives considered.
 - **No new dependencies in Phase 1.**
 - **Equivalent-measure scaling kept** ("200g/7oz" → "400g/14oz") — user deferred to judgement; long-term it avoids contradictory quantities on screen, and pack sizes are still protected.
 - **Cook-time tidy-up of site data** (`lib/tidy.ts`) — strips per-ingredient prices, "(Note N)" pointers to notes we don't display, and recipe-plugin markup ("((…))", "(, sliced)"), and drops a condensed "Abbreviated Recipe"/"Summary"-style section when the full method is present (otherwise users would cook every step twice). Rules are deliberately narrow and covered by "leaves unchanged" tests. Alternatives: show raw text (noisy at the stove), or show notes (would require scraping non-structured content, out of scope).
+
+## Pre-Phase 2 — UI standards
+
+- **UI standards written down in `docs/UI-STANDARDS.md`** so Phase 2 tokens and Phase 3 screens are checked against one list (readability at distance, 56px targets, flat high-contrast, transform/opacity motion, platform-first). The user reviewed the list.
+- **No component catalogue (21st.dev dropped at user's request); components hand-built on native elements.** Native `<dialog>` for the ingredients sheet, avoiding Radix and Vaul. APG spinbutton for servings. `scaleX` bar for timer progress, because an SVG ring animated with `stroke-dashoffset` would break the transform/opacity-only motion rule. Alternative: shadcn/21st components, which bring Radix/Vaul/motion dependencies and decorative styling.
+- **Atkinson Hyperlegible Next shortlisted as a typeface**: built for low-vision legibility, OFL, and in `next/font/google`'s list in the installed Next.js (variable 200–800), so it needs no new dependency. Final choice happens at the Phase 2 checkpoint.
