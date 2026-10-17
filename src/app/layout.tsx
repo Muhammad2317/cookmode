@@ -1,12 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Atkinson_Hyperlegible_Next } from "next/font/google";
+import localFont from "next/font/local";
+import { ServiceWorker } from "@/components/ServiceWorker";
 import "./globals.css";
 
-// Atkinson Hyperlegible Next: approved at the Phase 2 checkpoint for its
-// low-vision legibility (see /styleguide and DECISIONS.md).
-const text = Atkinson_Hyperlegible_Next({
+// Atkinson Hyperlegible Next (OFL, see src/fonts/OFL.txt): approved at the
+// Phase 2 checkpoint for its low-vision legibility. Self-hosted from a local
+// file rather than next/font/google so Next can read the font's metrics and
+// generate a size-matched Arial fallback, so there's no layout shift when it swaps in.
+const text = localFont({
+  src: "../fonts/AtkinsonHyperlegibleNext-Latin.woff2",
+  weight: "200 800",
   variable: "--font-text",
-  subsets: ["latin"],
+  adjustFontFallback: "Arial",
 });
 
 export const metadata: Metadata = {
@@ -38,7 +43,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: PRE_PAINT }} />
       </head>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {children}
+        <ServiceWorker />
+      </body>
     </html>
   );
 }

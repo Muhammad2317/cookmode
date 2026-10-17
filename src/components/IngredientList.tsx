@@ -1,3 +1,4 @@
+import { displayFractions } from "../../lib/displayFractions";
 import { scaleIngredient } from "../../lib/scaleIngredient";
 
 export function IngredientList({
@@ -18,7 +19,7 @@ export function IngredientList({
     <ul className="text-body flex flex-col">
       {ingredients.map((line, i) => (
         <li key={i} className="py-2 break-words">
-          {scaleIngredient(line, factor)}
+          {displayFractions(scaleIngredient(line, factor))}
         </li>
       ))}
     </ul>
