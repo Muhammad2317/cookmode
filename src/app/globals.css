@@ -1,26 +1,189 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Cook Mode design tokens: "Kitchen minimal".
+ * One ground, one ink, one accent. Every text pair is WCAG AAA (≥ 7:1); the
+ * /styleguide page computes and shows the ratios. Light/dark follow the
+ * system; .theme-light / .theme-dark force a theme for side-by-side previews.
+ */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  color-scheme: light;
+  --ground: #fafaf7;
+  --surface: #efefe9;
+  --ink: #0d0d0c;
+  --muted: #45453f;
+  --line: #d6d6cc;
+  --accent: #8f2d0c;
+  --on-accent: #ffffff;
+
+  /* Motion. Travel collapses to 0 under reduced motion; fades stay. */
+  --duration-press: 100ms;
+  --duration-quick: 180ms;
+  --duration-step: 280ms;
+  --duration-sheet: 320ms;
+  --motion-distance: 24px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: dark;
+    --ground: #0d0d0c;
+    --surface: #1c1c1a;
+    --ink: #f4f4ee;
+    --muted: #bdbdb3;
+    --line: #3a3a36;
+    --accent: #ff8a5c;
+    --on-accent: #0d0d0c;
   }
 }
 
+.theme-light {
+  color-scheme: light;
+  --ground: #fafaf7;
+  --surface: #efefe9;
+  --ink: #0d0d0c;
+  --muted: #45453f;
+  --line: #d6d6cc;
+  --accent: #8f2d0c;
+  --on-accent: #ffffff;
+}
+
+.theme-dark {
+  color-scheme: dark;
+  --ground: #0d0d0c;
+  --surface: #1c1c1a;
+  --ink: #f4f4ee;
+  --muted: #bdbdb3;
+  --line: #3a3a36;
+  --accent: #ff8a5c;
+  --on-accent: #0d0d0c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-distance: 0px;
+    --duration-step: 120ms;
+    --duration-sheet: 120ms;
+  }
+}
+
+/* Same as the media query, for previewing reduced motion in the styleguide. */
+.reduced-motion {
+  --motion-distance: 0px;
+  --duration-step: 120ms;
+  --duration-sheet: 120ms;
+}
+
+/* Step transitions: the new step slides in from the side it came from. */
+@keyframes step-in-forward {
+  from {
+    opacity: 0;
+    transform: translateX(var(--motion-distance));
+  }
+}
+@keyframes step-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--motion-distance)));
+  }
+}
+
+/* Bottom sheet. With reduced motion it fades instead of sliding. */
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(min(100%, calc(var(--motion-distance) * 20)));
+  }
+}
+@keyframes sheet-out {
+  to {
+    opacity: 0;
+    transform: translateY(min(100%, calc(var(--motion-distance) * 20)));
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@theme inline {
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+
+  --font-sans: var(--font-text), ui-sans-serif, system-ui, sans-serif;
+  --font-display:
+    var(--font-heading, var(--font-text)), ui-sans-serif, system-ui, sans-serif;
+
+  /* Type scale: five sizes, fluid between a 375px phone and a 1280px desktop. */
+  --text-display: clamp(2.5rem, 1.95rem + 2.4vw, 4.5rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: clamp(1.5rem, 1.33rem + 0.75vw, 2rem);
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.01em;
+  --text-step: clamp(1.875rem, 1.4rem + 2vw, 2.75rem);
+  --text-step--line-height: 1.3;
+  --text-body: clamp(1.125rem, 1.07rem + 0.25vw, 1.25rem);
+  --text-body--line-height: 1.5;
+  --text-small: 1rem;
+  --text-small--line-height: 1.45;
+
+  --radius-control: 9999px;
+  --radius-surface: 1.25rem;
+
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Touch target sizes (px): minimum 44 everywhere, 56 in cook mode, 64 for the main action. */
+@utility tap-min {
+  min-height: 44px;
+  min-width: 44px;
+}
+@utility tap {
+  min-height: 56px;
+  min-width: 56px;
+}
+@utility tap-cta {
+  min-height: 64px;
+}
+
+@utility focus-ring {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+html {
+  /* No double-tap zoom delay; no grey flash on tap (we show our own press state). */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
 }
