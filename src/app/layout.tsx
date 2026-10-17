@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Atkinson_Hyperlegible_Next } from "next/font/google";
 import "./globals.css";
 
-// Provisional typeface until the Phase 2 design checkpoint; /styleguide
-// compares it against the other pairing options.
+// Atkinson Hyperlegible Next: approved at the Phase 2 checkpoint for its
+// low-vision legibility (see /styleguide and DECISIONS.md).
 const text = Atkinson_Hyperlegible_Next({
   variable: "--font-text",
   subsets: ["latin"],

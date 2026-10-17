@@ -10,7 +10,7 @@ export const PALETTE: Record<ThemeName, Record<string, string>> = {
     ink: "#0d0d0c",
     muted: "#45453f",
     line: "#d6d6cc",
-    accent: "#8f2d0c",
+    accent: "#1d3fa3",
     "on-accent": "#ffffff",
   },
   dark: {
@@ -19,7 +19,7 @@ export const PALETTE: Record<ThemeName, Record<string, string>> = {
     ink: "#f4f4ee",
     muted: "#bdbdb3",
     line: "#3a3a36",
-    accent: "#ff8a5c",
+    accent: "#8fbcf7",
     "on-accent": "#0d0d0c",
   },
 };

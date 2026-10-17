@@ -328,7 +328,7 @@ export default function StyleguidePage() {
       <Section
         id="colour"
         title="Colour"
-        intro="One ground, one ink, one accent. The accent is a deep paprika, reserved for running timers and selection. Every text pair is AAA (7:1 or more), computed below rather than eyeballed, and a unit test fails the build if a token drifts."
+        intro="One ground, one ink, one accent. The accent is enamel blue (deep cobalt in light mode, soft cornflower in dark), reserved for running timers and selection. Every text pair is AAA (7:1 or more), computed below rather than eyeballed, and a unit test fails the build if a token drifts."
       >
         <div className="grid gap-6 lg:grid-cols-2">
           <Palette theme="light" />
