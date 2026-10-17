@@ -22,9 +22,22 @@ export const viewport: Viewport = {
   ],
 };
 
+// Runs before first paint: a shared recipe link (/?url=…) shows the loading
+// skeleton straight away instead of flashing the home screen while the app
+// hydrates. First-party, inline, a single line; see page.tsx for the CSS hook.
+const PRE_PAINT = `if(/[?&]url=/.test(location.search))document.documentElement.classList.add("has-recipe-url")`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${text.variable} h-full antialiased`}>
+    // The pre-paint script may add a class before React hydrates.
+    <html
+      lang="en"
+      className={`${text.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: PRE_PAINT }} />
+      </head>
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );

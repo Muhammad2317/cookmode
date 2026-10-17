@@ -25,9 +25,14 @@ const variants: Record<ButtonVariant, string> = {
     "text-ink underline decoration-2 underline-offset-4 hover:decoration-4",
 };
 
-const sizes: Record<ButtonSize, string> = {
-  cta: "tap-cta px-8 text-body",
-  regular: "tap px-6 text-body",
+const heights: Record<ButtonSize, string> = {
+  cta: "tap-cta text-body",
+  regular: "tap text-body",
+};
+
+const sidePadding: Record<ButtonSize, string> = {
+  cta: "px-8",
+  regular: "px-6",
 };
 
 export function buttonClasses(
@@ -35,7 +40,10 @@ export function buttonClasses(
   size: ButtonSize = "regular",
   extra = "",
 ) {
-  return `${base} ${variants[variant]} ${sizes[size]} ${extra}`.trim();
+  // Quiet buttons read as links: full tap height, but no side padding so
+  // they line up with the text around them.
+  const padding = variant === "quiet" ? "" : sidePadding[size];
+  return `${base} ${variants[variant]} ${heights[size]} ${padding} ${extra}`.trim();
 }
 
 type CommonProps = {

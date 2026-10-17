@@ -172,6 +172,15 @@ h3 {
   text-wrap: balance;
 }
 
+/* Static fallback: home by default, skeleton when the URL carries a recipe. */
+.fallback-recipe,
+.has-recipe-url .fallback-home {
+  display: none;
+}
+.has-recipe-url .fallback-recipe {
+  display: block;
+}
+
 body {
   background: var(--ground);
   color: var(--ink);

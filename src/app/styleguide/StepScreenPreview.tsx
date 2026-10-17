@@ -41,8 +41,9 @@ export function StepScreenPreview({ theme }: { theme: "light" | "dark" }) {
         </section>
 
         <ActiveTimerBar
-          label="Boil the pasta"
-          remaining="7:42"
+          label="Step 2 · 12 minutes"
+          status="running"
+          remainingSeconds={462}
           progress={0.36}
         />
 
