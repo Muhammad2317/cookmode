@@ -181,6 +181,7 @@ export function Home({ onSubmit }: { onSubmit?: (url: string) => void }) {
             <li key={example.url}>
               <Link
                 href={`/?url=${encodeURIComponent(example.url)}`}
+                prefetch={false}
                 className="tap-min text-body group inline-flex items-center gap-2"
               >
                 <span className="underline decoration-2 underline-offset-4 group-hover:decoration-4">

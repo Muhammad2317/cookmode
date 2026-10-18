@@ -157,7 +157,7 @@ export function CookMode({
   };
 
   return (
-    <div className="flex h-dvh flex-col">
+    <main id="main" className="flex h-dvh flex-col">
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 overflow-hidden px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-8">
         <header className="flex items-start gap-3">
           <IconButton label="Exit cook mode" onClick={onExit}>
@@ -284,6 +284,6 @@ export function CookMode({
       >
         <IngredientList ingredients={recipe.ingredients} factor={factor} />
       </Sheet>
-    </div>
+    </main>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { validateUrl } from "../../lib/validateUrl";
@@ -7,13 +8,38 @@ import { useAnnouncer } from "../hooks/useAnnouncer";
 import { useTimers } from "../hooks/useTimers";
 import { loadRecipes, type LoadResult } from "../lib/recipeClient";
 import { ActiveTimerBar, ReplaceTimerPrompt } from "./ActiveTimerBar";
-import { CookMode } from "./screens/CookMode";
-import { ERROR_TITLES, ErrorScreen } from "./screens/ErrorScreen";
-import { Finish } from "./screens/Finish";
+import { ERROR_TITLES } from "./screens/errorCopy";
 import { Home } from "./screens/Home";
-import { Overview } from "./screens/Overview";
 import { OverviewSkeleton } from "./screens/OverviewSkeleton";
-import { RecipePicker } from "./screens/RecipePicker";
+import { setPageTitle } from "./PageTitle";
+
+// Only the home screen and skeleton ship in the initial bundle. Every other
+// screen is loaded on demand, and preloaded as soon as a recipe URL is
+// present, in parallel with the recipe fetch, so nobody waits on it. While a
+// chunk loads, the skeleton keeps the layout stable.
+const loadOverview = () => import("./screens/Overview");
+const loadCookMode = () => import("./screens/CookMode");
+const Overview = dynamic(() => loadOverview().then((m) => m.Overview), {
+  loading: () => <OverviewSkeleton />,
+});
+const CookMode = dynamic(() => loadCookMode().then((m) => m.CookMode), {
+  loading: () => <OverviewSkeleton />,
+});
+const RecipePicker = dynamic(
+  () => import("./screens/RecipePicker").then((m) => m.RecipePicker),
+  {
+    loading: () => <OverviewSkeleton />,
+  },
+);
+const Finish = dynamic(() => import("./screens/Finish").then((m) => m.Finish), {
+  loading: () => <OverviewSkeleton />,
+});
+const ErrorScreen = dynamic(
+  () => import("./screens/ErrorScreen").then((m) => m.ErrorScreen),
+  {
+    loading: () => <OverviewSkeleton />,
+  },
+);
 
 // The whole app is one route. The URL is the state, so every view is
 // shareable and the back button just works:
@@ -82,6 +108,13 @@ export function CookModeApp() {
     };
   }, [validUrl, attempt]);
 
+  // Warm the likely-next screens while the recipe is fetched.
+  useEffect(() => {
+    if (!validUrl) return;
+    void loadOverview();
+    void loadCookMode();
+  }, [validUrl]);
+
   const result = validUrl && loaded?.url === validUrl ? loaded.result : null;
   const recipes = result?.ok ? result.recipes : null;
   const needsPick =
@@ -131,7 +164,7 @@ export function CookModeApp() {
               : `${recipe?.title} · Cook Mode`;
 
   useEffect(() => {
-    document.title = title;
+    setPageTitle(title);
   }, [title]);
 
   // Recipe views must never compete with creators in search results.

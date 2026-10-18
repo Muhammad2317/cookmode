@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { CookModeApp } from "@/components/CookModeApp";
+import { PageTitle } from "@/components/PageTitle";
 import { HomeFallback } from "@/components/screens/HomeFallback";
 import { OverviewSkeleton } from "@/components/screens/OverviewSkeleton";
 
@@ -9,19 +10,22 @@ import { OverviewSkeleton } from "@/components/screens/OverviewSkeleton";
 // loading skeleton; the pre-paint script in layout.tsx picks which one shows.
 export default function Page() {
   return (
-    <Suspense
-      fallback={
-        <>
-          <div className="fallback-home">
-            <HomeFallback />
-          </div>
-          <div className="fallback-recipe">
-            <OverviewSkeleton />
-          </div>
-        </>
-      }
-    >
-      <CookModeApp />
-    </Suspense>
+    <>
+      <PageTitle />
+      <Suspense
+        fallback={
+          <>
+            <div className="fallback-home">
+              <HomeFallback />
+            </div>
+            <div className="fallback-recipe">
+              <OverviewSkeleton />
+            </div>
+          </>
+        }
+      >
+        <CookModeApp />
+      </Suspense>
+    </>
   );
 }

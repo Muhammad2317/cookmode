@@ -88,6 +88,7 @@ export function Overview({
       <AppHeader>
         <Link
           href="/"
+          prefetch={false}
           className="tap-min text-body inline-flex items-center underline decoration-2 underline-offset-4 hover:decoration-4"
         >
           New recipe
@@ -145,12 +146,12 @@ export function Overview({
         </section>
       </main>
 
-      <div className="bg-ground pointer-events-none sticky bottom-0 pb-[max(1rem,env(safe-area-inset-bottom))] lg:bg-transparent">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 pt-3 sm:px-8 lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
-          <div className="pointer-events-auto hidden self-end lg:block">
+      <div className="bg-ground pointer-events-none sticky bottom-0 pb-[max(1rem,env(safe-area-inset-bottom))] lg:bg-transparent lg:pb-0">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 pt-3 sm:px-8 lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16 lg:pt-0">
+          <div className="pointer-events-auto hidden self-end pb-[max(1rem,env(safe-area-inset-bottom))] lg:block">
             {timerSlot}
           </div>
-          <div className="lg:bg-ground pointer-events-auto flex flex-col gap-3">
+          <div className="lg:bg-ground pointer-events-auto flex flex-col gap-3 lg:pt-3 lg:pb-[max(1rem,env(safe-area-inset-bottom))]">
             <div className="lg:hidden">{timerSlot}</div>
             {canCook ? (
               <Button size="cta" onClick={onStart} className="w-full">

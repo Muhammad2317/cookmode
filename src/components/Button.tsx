@@ -13,7 +13,7 @@ export type ButtonSize = "cta" | "regular";
 
 const base =
   "inline-flex items-center justify-center gap-3 rounded-control font-semibold select-none " +
-  "transition-[transform,background-color] duration-(--duration-press) ease-out active:scale-[0.97] " +
+  "transition-transform duration-(--duration-press) ease-out active:scale-[0.97] " +
   "disabled:pointer-events-none disabled:opacity-40";
 
 const variants: Record<ButtonVariant, string> = {

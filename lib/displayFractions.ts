@@ -15,7 +15,9 @@ const MISSING: Record<string, string> = {
 const MISSING_RE = /(\d)?([⅓⅔⅛⅜⅝⅞])/g;
 
 export function displayFractions(text: string): string {
-  return text.replace(MISSING_RE, (_, whole: string | undefined, glyph: string) =>
-    whole ? `${whole} ${MISSING[glyph]}` : MISSING[glyph],
+  return text.replace(
+    MISSING_RE,
+    (_, whole: string | undefined, glyph: string) =>
+      whole ? `${whole} ${MISSING[glyph]}` : MISSING[glyph],
   );
 }

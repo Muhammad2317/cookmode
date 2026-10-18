@@ -12,10 +12,28 @@ export type LoadResult =
 
 const cache = new Map<string, Promise<LoadResult>>();
 
+// Started by the pre-paint script in layout.tsx for the page's own ?url=,
+// before any JS loads. null means the request failed.
+declare global {
+  interface Window {
+    __cookModeEarly?: { url: string; body: Promise<RecipeResponse | null> };
+  }
+}
+
+function takeEarly(url: string): Promise<RecipeResponse | null> | null {
+  const early = window.__cookModeEarly;
+  if (!early || early.url !== url) return null;
+  delete window.__cookModeEarly;
+  return early.body;
+}
+
 async function request(url: string): Promise<LoadResult> {
   try {
-    const res = await fetch(`/api/recipe?url=${encodeURIComponent(url)}`);
-    const body = (await res.json()) as RecipeResponse;
+    const body =
+      (await takeEarly(url)) ??
+      ((await (
+        await fetch(`/api/recipe?url=${encodeURIComponent(url)}`)
+      ).json()) as RecipeResponse);
     return body.ok
       ? { ok: true, recipes: body.recipes }
       : { ok: false, code: body.error.code };

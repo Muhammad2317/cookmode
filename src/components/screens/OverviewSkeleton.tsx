@@ -10,14 +10,14 @@ export function OverviewSkeleton() {
   return (
     <div className="flex min-h-dvh flex-col" aria-busy="true">
       <AppHeader />
-      <p role="status" className="sr-only">
-        Loading recipe…
-      </p>
-      <div
-        aria-hidden="true"
+      <main
+        id="main"
         className="mx-auto w-full max-w-6xl flex-1 px-5 pb-40 sm:px-8 lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16"
       >
-        <div className="flex flex-col gap-6">
+        <p role="status" className="sr-only">
+          Loading recipe…
+        </p>
+        <div aria-hidden="true" className="flex flex-col gap-6">
           <div className={`${block} aspect-[3/2] w-full lg:aspect-[16/9]`} />
           <div className="flex flex-col gap-3">
             <div className={`${block} h-[2.4rem] w-11/12 sm:h-14`} />
@@ -30,7 +30,7 @@ export function OverviewSkeleton() {
             <div className={`${block} h-12 w-20`} />
           </div>
         </div>
-        <div className="mt-12 flex flex-col gap-5 lg:mt-0">
+        <div aria-hidden="true" className="mt-12 flex flex-col gap-5 lg:mt-0">
           <div className={`${block} h-9 w-44`} />
           <div className={`${block} h-16 w-60`} />
           {Array.from({ length: 7 }, (_, i) => (
@@ -41,7 +41,7 @@ export function OverviewSkeleton() {
             />
           ))}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

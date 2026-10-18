@@ -95,6 +95,22 @@ Tested 2026-10-17 against the real function running locally under `wrangler page
 
 **Result: 10 / 10.** Error paths were checked live too: a page with no recipe (`NO_RECIPE_FOUND`), an HTML page over 3 MB (`TOO_LARGE`), a 12s response (`TIMEOUT` at 8s), 403/429 (`BLOCKED`), a 500 (`FETCH_FAILED`), and a redirect to `127.0.0.1` (refused, `FETCH_FAILED`).
 
+## Performance and accessibility
+
+Measured on a local build served by `wrangler pages dev`, with Lighthouse 13.5 mobile (simulated slow 4G, 4× CPU slowdown).
+
+| Screen   | Performance | Accessibility | Best practices | CLS |
+| -------- | ----------- | ------------- | -------------- | --- |
+| Home     | 74–83       | 100           | 100            | 0   |
+| Overview | 48–66       | 100           | 100            | 0   |
+| Cook     | 41–84       | 100           | 100            | 0   |
+
+**Treat the Performance column as provisional.** The dev laptop's Lighthouse CPU benchmark varied between 264 and 1089 across runs (a typical test machine scores around 1500–2000). Lighthouse itself warned that the CPU was slower than it expects. Accessibility, best practices and CLS don't depend on CPU speed. Performance will be re-measured with PageSpeed Insights against the deployed site and this table updated.
+
+**JavaScript (gzipped):** 145 KB loads on first visit, mostly React and the Next.js router; the app's own home-screen code is about 12 KB. The cook-mode screen adds about 10 KB on demand (5.4 KB screen + 4.5 KB bottom sheet). The overview adds 9 KB. Old browsers without module support also get a 39 KB polyfill bundle that modern browsers never download.
+
+**Checked by hand:** screens at 360×640, 430×932, 820×1180 and 1440×900 in light and dark mode, with no horizontal overflow and no console errors. Plus a skip link, keyboard navigation, and reduced motion (step and sheet transitions become fades).
+
 ## Why attribution is a design decision
 
 _To be filled in during Phase 5._

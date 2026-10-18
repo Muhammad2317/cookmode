@@ -12,7 +12,13 @@ describe("displayFractions", () => {
     expect(displayFractions(input)).toBe(expected);
   });
 
-  it.each([["1½ cups"], ["¾ tsp"], ["¼ onion"], ["400g flour"], ["a pinch of salt"]])("keeps %s", (input) => {
+  it.each([
+    ["1½ cups"],
+    ["¾ tsp"],
+    ["¼ onion"],
+    ["400g flour"],
+    ["a pinch of salt"],
+  ])("keeps %s", (input) => {
     expect(displayFractions(input)).toBe(input);
   });
 });
