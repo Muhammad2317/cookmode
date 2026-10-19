@@ -192,6 +192,13 @@ body {
   outline-offset: 3px;
 }
 
+/* Headings and the cook-mode step take focus programmatically (tabindex -1)
+   so screen readers start there. They aren't controls, so no ring: on a
+   freshly opened link Chrome would otherwise frame the whole step in black. */
+[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
 ::selection {
   background: var(--accent);
   color: var(--on-accent);

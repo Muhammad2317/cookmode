@@ -2,7 +2,7 @@
 
 Paste a recipe link and cook from a clean, full-screen, step-by-step view: giant text you can read from across the kitchen, tappable timers, serving scaling, and a screen that stays awake. Every recipe credits and links back to the person who wrote it.
 
-**Live:** https://cookmode.pages.dev _(after the first deploy)_
+**Live:** https://cookmode.pages.dev
 
 <!-- Screenshots: add PNGs to docs/screenshots/ and uncomment the table.
      Recipe photos belong to their creators, not to this repo: use a recipe
@@ -151,15 +151,15 @@ Tested 2026-10-17 against the real function running locally under `wrangler page
 
 ## Performance and accessibility
 
-Measured on a local build served by `wrangler pages dev`, with Lighthouse 13.5 mobile (simulated slow 4G, 4× CPU slowdown).
+PageSpeed Insights (Lighthouse 13.5, mobile: emulated Moto G Power on slow 4G), run against the live site on 2026-10-19. The overview and cook rows load a real recipe (BBC Good Food's easy pancakes) through the live API.
 
-| Screen   | Performance | Accessibility | Best practices | CLS |
-| -------- | ----------- | ------------- | -------------- | --- |
-| Home     | 74–83       | 100           | 100            | 0   |
-| Overview | 48–66       | 100           | 100            | 0   |
-| Cook     | 41–84       | 100           | 100            | 0   |
+| Screen    | Performance | Accessibility | Best practices | FCP   | LCP   | TBT   | CLS |
+| --------- | ----------- | ------------- | -------------- | ----- | ----- | ----- | --- |
+| Home      | 99          | 100           | 100            | 0.8 s | 1.8 s | 10 ms | 0   |
+| Overview  | 97          | 100           | 100            | 0.8 s | 2.6 s | 60 ms | 0   |
+| Cook mode | 99          | 100           | 100            | 0.8 s | 2.0 s | 30 ms | 0   |
 
-**Treat the Performance column as provisional.** The dev laptop's Lighthouse CPU benchmark varied between 264 and 1089 across runs (a typical test machine scores around 1500–2000). Lighthouse itself warned that the CPU was slower than it expects. Accessibility, best practices and CLS don't depend on CPU speed. Performance will be re-measured with PageSpeed Insights against the deployed site and this table updated.
+SEO is 100 on home. Recipe views score lower on purpose: they're `noindex`, so Cook Mode never competes with the creator in search. On the overview, the largest element is the creator's photo, loaded from their own image server.
 
 **JavaScript (gzipped):** 145 KB loads on first visit, mostly React and the Next.js router; the app's own home-screen code is about 12 KB. The cook-mode screen adds about 10 KB on demand (5.4 KB screen + 4.5 KB bottom sheet). The overview adds 9 KB. Old browsers without module support also get a 39 KB polyfill bundle that modern browsers never download.
 
