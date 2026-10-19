@@ -111,3 +111,17 @@ The URL is the state: `/?url=...` should load the recipe directly so views are s
 - Zero running costs, zero API keys, zero trackers.
 
 Start with Phase 0.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as local markdown files under `.scratch/<feature>/` (gitignored, so they stay on this machine). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default triage roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), recorded as a `Status:` line in each issue file. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root, created only when a term or decision is actually settled. See `docs/agents/domain.md`.
