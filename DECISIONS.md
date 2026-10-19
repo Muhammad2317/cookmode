@@ -101,3 +101,10 @@ One line per non-trivial decision: what, why, alternatives considered.
 - **Skip link** ("Skip to content") in the layout, targeting `#main` on every screen, including the skeleton and cook mode.
 - **Performance numbers are provisional until measured on the deployed site.** Local Lighthouse runs are unreliable on this laptop (CPU benchmark 264–1089 across runs, and Lighthouse warned about it). Five orphaned `wrangler pages dev` processes from the old `OneDrive\Desktop\CookMode` copy had been running since 17 Oct; they held ports 8788/8799 (so the first runs tested a stale build) and used about a core between them. They were stopped. Accessibility 100 and CLS 0 were stable on every run. Final Performance numbers will come from PageSpeed Insights after deployment.
 - **Remaining Performance cost is mostly framework**: Next's router chunk and React hydration are the largest main-thread tasks. Further cuts would mean leaving `useSearchParams`/Suspense (a custom location store) or changing framework. Both conflict with locked decisions, so I didn't make either change.
+
+## Phase 5: Ship prep
+
+- **Final README** adds a feature list, commented-out screenshot placeholders, an ASCII architecture diagram, the "Why attribution is a design decision" section and a deploy settings table. Screenshots aren't committed: the useful ones show creators' recipe photos, which aren't ours to redistribute. The placeholder comment says to use a permitted or blurred photo.
+- **Architecture text corrected**: extraction uses targeted string scanning, not HTMLRewriter (see Phase 1). The earlier README wording predated that decision.
+- **`.node-version` pins Node 22** for Cloudflare Pages' build image, matching local Node 22.12 and `@types/node` ^22. Alternative: a `NODE_VERSION` environment variable in the dashboard, which works but lives outside the repo.
+- **No `wrangler.toml`**: Pages' Git integration detects `functions/` automatically, and the build settings live in the dashboard (documented in the README). Fewer files, nothing to drift.

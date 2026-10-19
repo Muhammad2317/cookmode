@@ -1,22 +1,44 @@
 # Cook Mode
 
-Paste a recipe URL, get a clean, full-screen, step-by-step cooking view — timers, serving scaling, a screen that stays awake, and a prominent credit back to the original creator.
+Paste a recipe link and cook from a clean, full-screen, step-by-step view: giant text you can read from across the kitchen, tappable timers, serving scaling, and a screen that stays awake. Every recipe credits and links back to the person who wrote it.
 
-See `CLAUDE.md` for the full project brief and `DECISIONS.md` for a running log of why things are built the way they are.
+**Live:** https://cookmode.pages.dev _(after the first deploy)_
+
+<!-- Screenshots: add PNGs to docs/screenshots/ and uncomment the table.
+     Recipe photos belong to their creators, not to this repo: use a recipe
+     you have permission to show, or blur the photo. -->
+<!--
+| Home | Overview | Cook mode | Finish |
+| ---- | -------- | --------- | ------ |
+| ![Home](docs/screenshots/home.png) | ![Overview](docs/screenshots/overview.png) | ![Cook mode](docs/screenshots/cook.png) | ![Finish](docs/screenshots/finish.png) |
+-->
+
+_Screenshots: to be added._
+
+## What it does
+
+- **Paste a link, get the recipe.** Cook Mode reads the structured recipe data (schema.org JSON-LD) that most recipe sites publish for search engines. It doesn't scrape page layouts, use AI or need an account.
+- **Overview**: photo, title, a prominent "Recipe by [Author] · [Site]" credit that's visible without scrolling, times, and a servings stepper that rescales ingredients live ("1 x 400g tin" scales the 1, not the 400g).
+- **Cook mode**: one step per screen in very large type, with the section name and progress. Swipe, tap the 56px buttons, or use the arrow keys. The ingredients are one tap away in a bottom sheet.
+- **Timers**: durations in the step text ("10–12 minutes", "1½ hours") become tappable chips. A timer stores its end time, so it stays accurate when the phone locks or the tab is in the background, and it stays visible across steps. When it finishes, the phone vibrates, a beep generated in the browser (Web Audio) sounds, and the bar switches to a high-contrast "Time's up".
+- **Screen stays on** in cook mode (Screen Wake Lock), with a small indicator.
+- **Finish screen** that sends people back to the creator: "Enjoyed it? Thank [Author] by visiting the original recipe."
+- **Shareable**: the URL is the state (`/?url=…&view=cook&step=4`), so any view can be linked. Recipe views are `noindex`.
+- **Installable** as a PWA. The service worker caches the app shell only, never recipe content.
 
 ## Stack
 
 - **Frontend**: Next.js (App Router) + TypeScript, built fully static (`output: 'export'`). No server rendering, no Next.js API routes.
-- **Backend**: exactly one Cloudflare Pages Function, `functions/api/recipe.ts`, which fetches a recipe URL and returns normalised JSON.
-- **Styling**: Tailwind CSS.
+- **Backend**: exactly one Cloudflare Pages Function, `functions/api/recipe.ts`, which fetches a recipe page and returns normalised JSON.
+- **Styling**: Tailwind CSS. Self-hosted Atkinson Hyperlegible Next (OFL).
 - **Hosting**: Cloudflare Pages (free tier).
-- **Tests**: Vitest, for the framework-free logic in `/lib`.
+- **Tests**: Vitest, 349 unit tests for the framework-free logic in `/lib`.
 
-Zero running cost: no accounts, databases, trackers, or paid services anywhere in the stack.
+Zero running cost: no accounts, databases, cookies, analytics, trackers, API keys or paid services anywhere in the stack. The only runtime dependencies are `next`, `react` and `react-dom`.
 
 ## Running locally
 
-Requires Node.js 22+ and npm (already satisfied if you can run `node -v`).
+Requires Node.js 22+ and npm.
 
 ```bash
 npm install
@@ -24,27 +46,29 @@ npm install
 
 There are two dev workflows, depending on what you're working on:
 
-**1. Frontend only** — fast hot-reload, but `/api/recipe` is not available:
+**1. Frontend only**: fast hot-reload, but `/api/recipe` isn't available, so recipe links show the "Can't reach Cook Mode" error.
 
 ```bash
 npm run dev
 # open http://localhost:3000
 ```
 
-**2. Full stack (frontend + the Pages Function)** — this is the one that matches production, since it's the only way to exercise `/api/recipe` locally:
+**2. Full stack (frontend + the Pages Function)**: the one that matches production, and the only way to exercise `/api/recipe` locally.
 
 ```bash
 npm run preview
 # open http://localhost:8788
 ```
 
-`preview` runs `next build` (static export to `/out`) and then serves it through `wrangler pages dev`, which is Cloudflare's local emulator for both static assets and Pages Functions. There's no hot-reload here — re-run `npm run preview` after changes to see them.
+`preview` runs `next build` (static export to `/out`, plus the generated service worker) and then serves it through `wrangler pages dev`, Cloudflare's local emulator for static assets and Pages Functions. There's no hot-reload: re-run `npm run preview` after changes. Stop it with Ctrl+C when you're done. A forgotten server keeps the port and keeps serving an old build.
 
-If you've already got a build in `/out` and just want to restart the function/server without rebuilding:
+If you've already got a build in `/out` and just want to restart the server without rebuilding:
 
 ```bash
 npm run pages:dev
 ```
+
+Known local difference: `wrangler pages dev` doesn't apply `public/_headers` (security and cache headers) to static files when a `functions/` directory exists. Cloudflare Pages does, so check them on the deployed site with `curl -I`.
 
 ### Other commands
 
@@ -59,22 +83,52 @@ npm run test:watch    # Vitest, watch mode
 ## Project structure
 
 ```
-src/app/        Next.js App Router pages
-lib/            Framework-free logic (recipe parsing, duration/timer/scaling
-                 utilities) — fully unit-tested, used by both the frontend
-                 and the Pages Function
-functions/      Cloudflare Pages Functions (api/recipe.ts is the only one)
+src/app/          The single route (/), /styleguide, manifest and icons
+src/components/   Screens (home, overview, picker, cook mode, finish, errors)
+                  and the components they share
+src/hooks/        Timers, wake lock, screen-reader announcer, clock
+src/lib/          Browser-only helpers: recipe client, alarm, icon drawing
+lib/              Framework-free logic, unit-tested and shared by the frontend
+                  and the Pages Function: HTML/JSON-LD extraction, parseRecipe,
+                  parseDuration, detectTimers, scaleIngredient, URL
+                  validation, timer engine, design tokens
+functions/        The Cloudflare Pages Function (api/recipe.ts)
+public/_headers   Security headers (CSP etc.) and cache rules for Cloudflare
+scripts/          Post-build service worker generator
+docs/             UI standards the screens are checked against
 ```
 
 ## Architecture overview
 
-A request flow, end to end:
+```
+ Browser (static Next.js export)              Cloudflare Pages Function
+ -------------------------------              -------------------------
+ /?url=https://site/recipe
+   | inline script, before the app's JS --->  GET /api/recipe?url=...
+   |                                            1. validate the URL: http(s)
+   |                                               only, no localhost or
+   |                                               private IPs, every
+   |                                               redirect re-checked
+   |                                            2. fetch the page: honest
+   |                                               User-Agent, 8s timeout,
+   |                                               3 MB cap while streaming
+   |                                            3. scan for JSON-LD blocks
+   |                                               (string scanning, no DOM)
+   |                                            4. parseRecipe -> Recipe[]
+   | <------------- recipe JSON only -------
+   |
+   +- overview: scaleIngredient runs live in the browser
+   +- cook mode: detectTimers -> timer chips; timers stored as
+                 end timestamps; Screen Wake Lock
+```
 
-1. User pastes a recipe URL on the home screen.
-2. The frontend calls `GET /api/recipe?url=...` — the one Cloudflare Pages Function in this project.
-3. The function fetches the target page, scans it for `<script type="application/ld+json">` blocks (no DOM parser — `HTMLRewriter`/string scanning only, to stay inside Cloudflare's free-tier CPU budget), and runs `parseRecipe` (in `/lib`) to normalise whatever Recipe schema shape it finds into one clean type.
-4. The frontend renders the overview and cook-mode screens from that normalised JSON. Serving scaling (`scaleIngredient`) and timer detection (`detectTimers`) run client-side, in the browser, on the already-normalised data.
-5. Nothing is stored server-side — no database, no cache beyond a short `Cache-Control` header on the function response.
+1. A recipe link is the app's state: `/?url=…`. A small inline script starts the `/api/recipe` request and shows the loading skeleton before the app's JavaScript has downloaded. When the JSON arrives, it also preloads the recipe photo.
+2. The function validates the URL, fetches the page, and pulls out every `<script type="application/ld+json">` block with targeted string scanning. That keeps it well inside the free tier's CPU budget (no jsdom, no cheerio). It tolerates messy JSON (HTML entities, trailing commas, stray control characters) and finds the Recipe node wherever it lives: at the top level, in `@graph`, in arrays, under `@type` arrays, or behind `@id` references.
+3. `parseRecipe` normalises every variant into one `Recipe` type: authors, image, yield, ISO 8601 durations, ingredients, and steps (plain text, `HowToStep` or `HowToSection`).
+4. Failures come back as typed errors (`INVALID_URL`, `FETCH_FAILED`, `BLOCKED`, `TIMEOUT`, `NO_RECIPE_FOUND`, `TOO_LARGE`). Each has its own friendly screen with a link to the original page.
+5. Nothing is stored server-side. Successful responses get `Cache-Control: public, max-age=600`, errors get `no-store`, and every response sends `X-Robots-Tag: noindex`.
+
+The reasoning behind each choice, with the alternatives considered, is in [`DECISIONS.md`](DECISIONS.md). The original brief is in [`CLAUDE.md`](CLAUDE.md).
 
 ## Live extraction test results
 
@@ -113,4 +167,30 @@ Measured on a local build served by `wrangler pages dev`, with Lighthouse 13.5 m
 
 ## Why attribution is a design decision
 
-_To be filled in during Phase 5._
+Recipe sites are free to read because the people who write them earn from visits: ads, newsletters, books, trust. A tool that lifts a recipe off its page takes that visit away. Most "clean recipe" tools treat credit as a footnote. Cook Mode treats it as part of the product:
+
+- **The credit comes right after the title.** "Recipe by [Author] · [Site]", linked to the original, is placed so it's on screen without scrolling. That was measured at 360×640, 390×844, 1280×800 and 1440×900, not assumed.
+- **The ending sends people back.** The finish screen's main action is a big button to the original recipe: "Enjoyed it? Thank [Author] by visiting the original recipe."
+- **So do the errors.** If a site blocks Cook Mode or has no structured data, the error screen links to the original page instead of leaving a dead end.
+- **The creator can see the visit.** The "View the original recipe" link keeps the browser's default referrer policy, so the traffic shows up in the creator's analytics. (Photos load with `no-referrer`, for the reader's privacy.)
+- **Cook Mode never competes in search.** Recipe views carry a `noindex` robots meta tag, and the API sends `X-Robots-Tag: noindex`, so a Cook Mode link can't outrank the original.
+- **It only takes what's offered.** Cook Mode reads the structured data sites publish for search engines and recipe cards. It doesn't scrape layouts, get around bot walls or pretend to be a browser: its User-Agent says what it is. When a site says no, Cook Mode accepts that.
+- **It keeps nothing.** Recipe text isn't stored anywhere beyond a 10-minute HTTP cache header, and the service worker never caches recipe content. The creator's page stays the source of truth.
+
+The goal is to be a better way to cook a creator's recipe, not a replacement for their site.
+
+## Deploying to Cloudflare Pages
+
+Cloudflare Pages builds from GitHub: every push to `main` deploys to production, and every other branch or pull request gets its own preview URL. No `wrangler.toml` is needed.
+
+| Setting                | Value                                                                      |
+| ---------------------- | -------------------------------------------------------------------------- |
+| Framework preset       | None                                                                       |
+| Build command          | `npm run build` (also generates the service worker)                        |
+| Build output directory | `out`                                                                      |
+| Root directory         | _(leave empty)_                                                            |
+| Functions directory    | `functions` at the repo root; detected automatically, nothing to configure |
+| Node version           | 22, from `.node-version` (or set the `NODE_VERSION` environment variable)  |
+| Environment variables  | None. There are no API keys or secrets.                                    |
+
+If the project name `cookmode` is taken and Cloudflare assigns a different `*.pages.dev` address, update the `+https://cookmode.pages.dev` link in the User-Agent in `functions/api/recipe.ts`, so sites can see who is fetching their pages.
