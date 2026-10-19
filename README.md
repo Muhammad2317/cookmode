@@ -13,7 +13,11 @@ Paste a recipe link and cook from a clean, full-screen, step-by-step view: giant
 | ![Home](docs/screenshots/home.png) | ![Overview](docs/screenshots/overview.png) | ![Cook mode](docs/screenshots/cook.png) | ![Finish](docs/screenshots/finish.png) |
 -->
 
-_Screenshots: to be added._
+<img width="604" height="1368" alt="image" src="https://github.com/user-attachments/assets/69c86461-80ac-484d-9fe6-e8dbcc8314ac" />
+<img width="616" height="1370" alt="image" src="https://github.com/user-attachments/assets/d2ffed26-b775-4140-b699-ffa728ff57c3" />
+<img width="2842" height="1558" alt="image" src="https://github.com/user-attachments/assets/d87cb4ad-7337-4a65-9b5a-76024ca7ddf3" />
+
+
 
 ## What it does
 
