@@ -23,8 +23,6 @@ Paste a recipe link and cook from a clean, full-screen, step-by-step view: giant
   <kbd><img width="302" alt="Cook Mode cooking step on a phone" src="https://github.com/user-attachments/assets/d2ffed26-b775-4140-b699-ffa728ff57c3" /></kbd>
 </p>
 
-
-
 ## What it does
 
 - **Paste a link, get the recipe.** Cook Mode reads the structured recipe data (schema.org JSON-LD) that most recipe sites publish for search engines. It doesn't scrape page layouts, use AI or need an account.
@@ -88,7 +86,12 @@ npm run format        # Prettier, writes changes
 npm run format:check  # Prettier, check only
 npm run test          # Vitest, runs /lib unit tests once
 npm run test:watch    # Vitest, watch mode
+npm run smoke         # build, then check every screen in headless Chrome
 ```
+
+### Smoke test
+
+`npm run smoke` builds the site, serves it with the Pages Function on a free port, and loads every screen (home, overview, cook mode, finish, error) in headless Chrome at four widths: 360, 430, 820 and 1440px. Each screen must have the right page title, no horizontal overflow and no console errors, plus its key content: on the overview, the creator credit visible without scrolling. It needs a local Chrome (set `CHROME_PATH` if it isn't found) and fetches one live recipe, so a failure on the recipe screens can be the recipe site's fault. Options: `node scripts/smoke.mjs --recipe <url> --shots <dir> --keep-going` (uses the existing build).
 
 ## Project structure
 
